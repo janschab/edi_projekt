@@ -18,10 +18,21 @@ $(document).ready(() => {
         }
     };
 
+    const Helpers = {
+        hslaArray: (length) => {
+            const array = new Array(length);
+            for (let i = 0; i < length; i++) {
+                array[i] = `hsla(${360 * (i + 1) / (length + 1)}, 100%, 70%, 0.5)`;
+            }
+            return array;
+        }
+    };
+
     const State = {
-        userIds: new Set(),
+        userIds: undefined,
         userId: undefined,
-        color: DEFAULT_COLOR
+        color: DEFAULT_COLOR,
+        charts: {}
     };
 
     const Api = {
@@ -36,7 +47,7 @@ $(document).ready(() => {
     const Controller = {
         colors: {
             render(color) {
-                const template = $('.color').clone().removeClass('d-none');
+                const template = $('.color').first().clone().removeClass('d-none');
                 $('#colors').empty();
 
                 color.forEach((colorData) => {
@@ -62,31 +73,135 @@ $(document).ready(() => {
         },
         todos: {
             render: (todos) => {
-                const template = $('.todo').clone().removeClass('d-none');
+                const template = $('.todo').first().clone().removeClass('d-none');
                 $('#todos').empty();
+
+                const chart = {
+                    bar: {
+                        type: 'bar',
+                        name: 'Todos',
+                        labels: ['zrobione', 'do zrobienia'],
+                        values: [0, 0]
+                    }, pie: {
+                        type: 'pie',
+                        name: 'długości zadań',
+                        labels: [],
+                        values: [],
+                        data: new Map()
+                    }
+                };
 
                 todos.forEach((todo) => {
                     const todoTpl = template.clone();
-                    if (!todo.completed) {
-                        todoTpl.find('.todo__indicator__inside').removeClass('todo__indicator__active');
-                    }
+                    todoTpl.find('.todo__indicator__inside').toggleClass('todo__indicator__active', todo.completed);
                     todoTpl.find('.todo__content').text(todo.title);
                     todoTpl.find('.todo__indicator, .todo__indicator__active').css({
                         backgroundColor: State.color
                     });
 
+                    chart.bar.values[todo.completed ? 0 : 1]++;
+                    if (chart.pie.data.has(todo.title.length)) {
+                        chart.pie.data.set(todo.title.length, chart.pie.data.get(todo.title.length) + 1);
+                    } else {
+                        chart.pie.data.set(todo.title.length, 1);
+                    }
                     todoTpl.appendTo('#todos');
                 });
+
+                chart.pie.data.forEach((value, key) => {
+                    chart.pie.labels.push(key);
+                    chart.pie.values.push(value);
+                });
+
+                if (State.charts[chart.bar.type]) {
+                    Controller.chart.update(chart.bar);
+                } else {
+                    Controller.chart.render(chart.bar);
+                }
+
+                if (State.charts[chart.pie.type]) {
+                    Controller.chart.update(chart.pie);
+                } else {
+                    Controller.chart.render(chart.pie);
+                }
             },
             addClickListener: () => {
                 $('body').on('click', '.todo__indicator', (event) => {
-                    console.log($(event.currentTarget).find('.todo__indicator__inside'));
                     $(event.currentTarget).find('.todo__indicator__inside')
                         .toggleClass('todo__indicator__active')
                         .css({
                             backgroundColor: State.color
                         });
+                    if ($(event.currentTarget).find('.todo__indicator__active').length) {
+                        State.charts.bar.data.datasets[0].data[0]++;
+                        State.charts.bar.data.datasets[0].data[1]--;
+                    } else {
+                        State.charts.bar.data.datasets[0].data[0]--;
+                        State.charts.bar.data.datasets[0].data[1]++;
+                    }
+                    State.charts.bar.update();
                 });
+
+                const checkButtonStatus = () => {
+                    $('#next-button')[0].toggleAttribute('disabled', !State.userIds.isNext());
+                    $('#prev-button')[0].toggleAttribute('disabled', !State.userIds.isPrev());
+                };
+                checkButtonStatus();
+
+                $('#prev-button').on('click', () => {
+                    State.userId = State.userIds.prev().getCurrent();
+                    Controller.todos.render(State.todos.filter((todo) => {
+                        return todo.userId === State.userId;
+                    }));
+                    checkButtonStatus();
+                });
+
+                $('#next-button').on('click', () => {
+                    State.userId = State.userIds.next().getCurrent();
+                    Controller.todos.render(State.todos.filter((todo) => {
+                        return todo.userId === State.userId;
+                    }));
+                    checkButtonStatus();
+                });
+            }
+        },
+        chart: {
+            render: ({name, labels, values, type}) => {
+                const ctx = document.getElementById(type + 'Chart').getContext('2d');
+                State.charts[type] = new Chart(ctx, {
+                    type,
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: name,
+                            data: values,
+                            backgroundColor: Helpers.hslaArray(values.length),
+                            borderColor: Helpers.hslaArray(values.length),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: type === 'bar' ? {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        } : undefined
+                    }
+                });
+            },
+            update: ({name, labels, values, type}) => {
+                State.charts[type].data.labels = labels;
+                State.charts[type].data.datasets = [{
+                    label: name,
+                    data: values,
+                    backgroundColor: Helpers.hslaArray(values.length),
+                    borderColor: Helpers.hslaArray(values.length),
+                    borderWidth: 1
+                }];
+                State.charts[type].update();
             }
         }
     };
@@ -98,18 +213,22 @@ $(document).ready(() => {
     });
 
     Api.getTodos().then((todos) => {
+        const userIdsSet = new Set();
         todos.forEach(({userId}) => {
-            State.userIds.add(userId);
+            userIdsSet.add(userId);
         });
+        State.userIds = new IdsArray(...userIdsSet.values());
 
-        State.userId = State.userIds.values().next().value;
+        State.todos = todos;
+
+        State.userId = State.userIds.getCurrent();
 
         Controller.todos.render(todos.filter((todo) => {
             return todo.userId === State.userId;
         }));
-    });
 
-    Controller.colors.addClickListener();
-    Controller.todos.addClickListener();
+        Controller.colors.addClickListener();
+        Controller.todos.addClickListener();
+    });
 
 });

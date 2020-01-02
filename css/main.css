@@ -39,3 +39,9 @@
     z-index: 12;
 }
 
+.chart {
+    height: 400px;
+    max-height: 500px;
+    position: relative;
+    margin-bottom: 60px;
+}
