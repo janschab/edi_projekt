@@ -39,9 +39,37 @@
     z-index: 12;
 }
 
+.todo_header{
+    padding: 20px 10px;
+    overflow: hidden;
+    background-color: #f1f1f1;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.todo_header a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.todo_header a {
+    float: left;
+    color: black;
+    text-align: center;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 18px; 
+    line-height: 25px;
+    border-radius: 4px;
+  }
+
 .chart {
     height: 400px;
     max-height: 500px;
     position: relative;
     margin-bottom: 60px;
 }
+
+footer {
+    display: block;
+  }
