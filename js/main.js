@@ -57,17 +57,24 @@ $(document).ready(() => {
                     colorTpl.data({
                         color: colorData.color
                     });
+                    colorTpl.find('.color__name').text(colorData.name);
+                    colorTpl.find('.color__code').text(colorData.color);
 
                     colorTpl.appendTo('#colors');
                 });
             },
+            setActive: (element) => {
+                $('.color.active').removeClass('active');
+                const color = $(element).data().color;
+                $(element).addClass('active');
+                State.color = color;
+                $('.todo__indicator, .todo__indicator__active').css({
+                    backgroundColor: color
+                });
+            },
             addClickListener: () => {
                 $('body').on('click', '.color', (event) => {
-                    const color = $(event.currentTarget).data().color;
-                    State.color = color;
-                    $('.todo__indicator, .todo__indicator__active').css({
-                        backgroundColor: color
-                    });
+                    Controller.colors.setActive(event.currentTarget);
                 });
             }
         },
@@ -126,7 +133,7 @@ $(document).ready(() => {
                 }
             },
             addClickListener: () => {
-                $('body').on('click', '.todo__indicator', (event) => {
+                $('body').on('click', '.todo', (event) => {
                     $(event.currentTarget).find('.todo__indicator__inside')
                         .toggleClass('todo__indicator__active')
                         .css({
@@ -209,7 +216,7 @@ $(document).ready(() => {
     Api.getColors().then(({data}) => {
         Controller.colors.render(data);
 
-        State.color = data[0].color;
+        Controller.colors.setActive($('.color')[0]);
     });
 
     Api.getTodos().then((todos) => {
