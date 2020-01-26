@@ -1,6 +1,22 @@
 .color {
     height: 100px;
     cursor: pointer;
+    align-items: center;
+    justify-content: space-evenly;
+    display: flex;
+}
+
+.color__name {
+    font-weight: bold;
+}
+
+.color.active {
+    outline: 10px solid rgba(0,0,0,0.5);
+    outline-offset: -10px;
+}
+
+.todo {
+    cursor: pointer;
 }
 
 .todo__indicator {
@@ -58,7 +74,7 @@
     text-align: center;
     padding: 12px;
     text-decoration: none;
-    font-size: 18px; 
+    font-size: 18px;
     line-height: 25px;
     border-radius: 4px;
   }
