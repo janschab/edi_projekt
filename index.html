@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="pl">
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -17,24 +16,27 @@
 </head>
 
 <body>
-    <header class="todo_header">
+    <header class="todo_header mb-4">
         <a href="index.html"><h1>Todo list</h1></a>
     </header>
     <main>
-        <div class="row">
-            <div class="col-sm-12">
-                <h3>Wybierz motyw strony</h3>
-                <div id="colors" class="row">
-                    <div class="color col-sm-4 col-md-2 d-none"></div>
+        <div class="d-flex flex-wrap mb-4">
+            <div class="col-sm-12 p-0">
+                <h3 class="ml-4">Wybierz motyw strony</h3>
+                <div id="colors" class="d-flex flex-wrap">
+                    <div class="color col-sm-12 col-md-6 col-lg-2 d-none">
+                        <div class="color__name"></div>
+                        <div class="color__code"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="d-flex flex-wrap">
             <div class="col-sm-12">
-                <h3>Lista rzeczy do zrobienia</h3>
+                <h3 class="ml-2">Lista rzeczy do zrobienia</h3>
                 <button id="prev-button" class="btn btn-dark">Poprzedni</button>
                 <button id="next-button" class="btn btn-dark">Następny</button>
-                <div class="row">
+                <div class="d-flex flex-wrap">
                     <div class="col-sm-12 col-lg-6">
                         <div id="todos" class="d-flex flex-wrap">
                             <div class="todo d-none w-100">
